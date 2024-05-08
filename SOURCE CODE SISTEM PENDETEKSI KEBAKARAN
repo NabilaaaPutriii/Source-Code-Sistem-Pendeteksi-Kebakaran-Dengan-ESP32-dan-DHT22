@@ -1,0 +1,62 @@
+#include "DHTesp.h"
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+const int DHT_PIN = 15;
+const int led = 25;
+const int BUZZER = 18;
+
+DHTesp dhtSensor;
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  Serial.begin(9600);
+  pinMode(led, OUTPUT);     // Inisialisasi pin untuk LED
+  pinMode(BUZZER, OUTPUT);  // Inisialisasi pin untuk buzzer
+  pinMode(25, OUTPUT);       // Inisialisasi pin untuk LED merah
+  dhtSensor.setup(DHT_PIN, DHTesp::DHT22);
+  lcd.init();
+  lcd.backlight();
+}
+
+void loop() {
+  TempAndHumidity  data = dhtSensor.getTempAndHumidity();
+  
+  // Menampilkan suhu dan kelembaban pada Serial Monitor
+  Serial.println("Temp: " + String(data.temperature, 2) + "°C");
+  Serial.println("Humidity: " + String(data.humidity, 1) + "%");
+  Serial.println("---");
+
+  // Menghidupkan buzzer selama 1 second
+  digitalWrite(BUZZER, HIGH);
+  delay(1000);
+
+  // Menampilkan suhu pada LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: " + String(data.temperature, 2) + " C");
+  delay(1000);
+  lcd.clear();
+  lcd.setCursor(0, 1);
+  delay(1000);
+  lcd.clear();
+
+  // Menampilkan kelembaban pada LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Humidity: " + String(data.humidity, 1) + "%");
+  delay(1000);
+  lcd.clear();
+  lcd.setCursor(0, 1);
+  delay(1000);
+  lcd.clear();
+
+  // Menentukan kondisi berdasarkan suhu
+  if (data.temperature < 30) {
+    lcd.print("AMAN");
+    digitalWrite(25, LOW);  // Mematikan LED merah
+    noTone(BUZZER);         // Mematikan buzzer
+  } else if (data.temperature > 40) {
+    lcd.print("BAHAYA API!!!");
+    digitalWrite(25, HIGH);  // Menghidupkan LED merah
+    tone(BUZZER, 165);       // Menghasilkan suara pada buzzer
+    }
+  }
